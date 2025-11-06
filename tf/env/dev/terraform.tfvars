@@ -15,7 +15,7 @@ node_group_config = {
   instance_type= "t3a.medium"
 }
 key_name = "Shar-WIZ-KP"
-db_backup_bucket = "shar-wiz-db-backup"
+db_backup_bucket = "shar-wiz-mongodb-backup"
 common_tags = {
   Environment = "dev"
   Project     = "shar-wiz-app"

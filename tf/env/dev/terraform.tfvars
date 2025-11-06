@@ -1,8 +1,8 @@
 aws_region = "us-west-2"
 name_prefix = "shar-wiz"
 vpc_cidr = "10.20.0.0/22"
-public_subnets = ["10.20.1.0/27"]
-private_subnets = ["10.20.2.0/27"]
+public_subnets = ["10.20.1.0/27" , "10.20.1.32/27"]
+private_subnets = ["10.20.2.0/27", "10.20.2.32/27"]
 outdated_ami_id = "ami-01542bb65dbd3962c"
 default_instance_type = "t3a.medium"
 cluster_name = "shar-wiz-eks"

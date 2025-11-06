@@ -36,12 +36,6 @@ variable "node_group_config" {
     min_size     = number
     instance_type= string
   })
-  default = {
-    desired_size = 1
-    max_size     = 2
-    min_size     = 1
-    instance_type= "t3.small"
-  }
 }
 variable "tags" { 
   type = map(string) 

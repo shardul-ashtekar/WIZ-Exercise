@@ -65,3 +65,11 @@ variable "eks_node_ami" {
   description = "The AMI ID for the EKS worker nodes"
   type        = string
 }
+variable "node_group_config" {
+  type = object({
+    desired_size = number
+    max_size     = number
+    min_size     = number
+    instance_type= string
+  })
+}

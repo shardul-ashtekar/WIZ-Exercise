@@ -65,7 +65,7 @@ resource "aws_launch_template" "shar-eks-lt" {
 
   network_interfaces {
     associate_public_ip_address = false
-    security_groups  = [aws_security_group.shar-eks-nodes-sg.id]
+    security_groups  = [aws_security_group.shar-eks-node-sg.id]
   }
   lifecycle {
     create_before_destroy = true

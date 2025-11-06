@@ -77,7 +77,7 @@ resource "aws_security_group_rule" "node_to_cluster" {
   to_port                  = 443
   protocol                 = "tcp"
   source_security_group_id = aws_security_group.shar-eks-node-sg.id
-  security_group_id        = aws_eks_cluster.wiz-eks.cluster_security_group_id
+  security_group_id        = aws_eks_cluster.wiz-eks.vpc_config[0].cluster_security_group_id
   depends_on               = [aws_eks_cluster.wiz-eks]
 }
 

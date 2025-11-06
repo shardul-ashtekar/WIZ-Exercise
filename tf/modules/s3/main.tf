@@ -3,6 +3,14 @@ resource "aws_s3_bucket" "mongo_db_backup" {
   tags   = var.tags
 }
 
+resource "aws_s3_bucket_public_access_block" "mongo_db_backup_block" {
+  bucket                  = aws_s3_bucket.mongo_db_backup.id
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
 resource "aws_s3_bucket_policy" "mongo_db_backup_policy" {
   bucket = aws_s3_bucket.mongo_db_backup.id
 

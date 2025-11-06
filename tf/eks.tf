@@ -8,6 +8,7 @@ module "eks" {
   key_name        = var.key_name
   mongo_sg_id     = module.ec2.mongo_sg_id
   eks_role_arn    = module.iam.eks_role_arn
+  ec2_instance_cidr = var.public_subnets[0]
   node_role_arn = module.iam.node_role_arn
   node_group_config = {
     desired_size = 1

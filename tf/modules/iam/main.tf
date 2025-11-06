@@ -90,3 +90,39 @@ resource "aws_iam_instance_profile" "ec2_instance_profile" {
   role = aws_iam_role.ec2_role.name
 }
 
+
+########### GitHub Actions OIDC Trust Policy ##########
+
+data "aws_iam_policy_document" "github_oidc_assume_role" {
+  statement {
+    effect = "Allow"
+    principals {
+      type        = "Federated"
+      identifiers = ["arn:aws:iam::337909747602:oidc-provider/token.actions.githubusercontent.com"]
+    }
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:sub"
+      values   = ["repo:odl_user_1942432/shar-wiz-app:ref:refs/heads/main"]
+    }
+  }
+}
+
+# IAM Role for GitHub Actions
+resource "aws_iam_role" "github_actions_role" {
+  name               = "${var.tags.Project}-github-actions-role"
+  assume_role_policy = data.aws_iam_policy_document.github_oidc_assume_role.json
+  tags               = var.tags
+}
+
+# Attach ECR and EKS policies
+resource "aws_iam_role_policy_attachment" "github_actions_ecr" {
+  role       = aws_iam_role.github_actions_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser"
+}
+
+resource "aws_iam_role_policy_attachment" "github_actions_eks" {
+  role       = aws_iam_role.github_actions_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+}

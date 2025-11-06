@@ -37,3 +37,7 @@ variable "tags" {
   type = map(string) 
   default = {} 
 }
+variable "ec2_instance_cidr" {
+  description = "CIDR block of the EC2 instance to allow access to EKS cluster"
+  type        = string
+}

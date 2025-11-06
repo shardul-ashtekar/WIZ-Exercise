@@ -82,6 +82,19 @@ resource "aws_security_group_rule" "node_to_cluster" {
 }
 
 ########################################
+# Whitelist EC2 Instance IP to EKS Cluster SG
+
+resource "aws_security_group_rule" "whitelist_ec2_to_cluster" {
+  type                     = "ingress"
+  from_port                = 443
+  to_port                  = 443
+  protocol                 = "tcp"
+  cidr_blocks              = [var.ec2_instance_cidr]
+  security_group_id        = aws_eks_cluster.wiz-eks.vpc_config[0].cluster_security_group_id
+  depends_on               = [aws_eks_cluster.wiz-eks]
+}
+
+########################################
 # Fetch EKS Optimized AMI
 
 data "aws_ssm_parameter" "eks_ami" {
@@ -151,3 +164,36 @@ resource "aws_eks_node_group" "wiz-eks-ng" {
 
 }
 
+
+########################################
+# EKS ADD-ONS
+
+resource "aws_eks_addon" "vpc_cni" {
+  cluster_name      = aws_eks_cluster.wiz-eks.name
+  addon_name        = "vpc-cni"
+  addon_version     = "v1.17.1-eksbuild.1"
+  
+  tags = merge(var.tags, {
+    Name = "${var.cluster_name}-vpc-cni-addon"
+  })
+}
+
+resource "aws_eks_addon" "coredns" {
+  cluster_name      = aws_eks_cluster.wiz-eks.name
+  addon_name        = "coredns"
+  addon_version     = "v1.10.1-eksbuild.1"
+
+  tags = merge(var.tags, {
+    Name = "${var.cluster_name}-coredns-addon"
+  })
+}
+
+resource "aws_eks_addon" "kube_proxy" {
+  cluster_name      = aws_eks_cluster.wiz-eks.name
+  addon_name        = "kube-proxy"
+  addon_version     = "v1.32.0-eksbuild.1"
+
+  tags = merge(var.tags, {
+    Name = "${var.cluster_name}-kube-proxy-addon"
+  })
+}

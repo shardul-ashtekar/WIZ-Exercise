@@ -22,7 +22,7 @@ jobs:
         uses: hashicorp/setup-terraform@v2
 
       - name: Terraform Init
-        run: terraform init -backend-config=env/dev/backend_override.tf
+        run: terraform init 
         working-directory: tf/
 
       - name: Terraform Plan

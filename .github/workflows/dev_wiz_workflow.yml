@@ -25,6 +25,10 @@ jobs:
       - name: Terraform Init
         run: terraform init 
         working-directory: tf/
+      
+      - name: Terraform Import EKS Cluster
+        run: terraform import aws_eks_cluster.wiz-eks shar-wiz-eks
+        working-directory: tf/
 
       - name: Terraform Plan
         run: terraform plan -var-file=env/dev/terraform.tfvars

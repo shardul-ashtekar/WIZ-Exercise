@@ -39,34 +39,66 @@ resource "aws_instance" "mongo_ec2" {
   vpc_security_group_ids = [aws_security_group.mongo_sg.id]
 
   user_data = <<-EOF
-    #!/bin/bash
+      #!/bin/bash
+      # Update system
+      yum update -y
 
-    # Install MongoDB 6.0 on Amazon Linux 2
-    echo "[mongodb-org-6.0]
-    name=MongoDB Repository
-    baseurl=https://repo.mongodb.org/yum/amazon/2/mongodb-org/6.0/x86_64/
-    gpgcheck=1
-    enabled=1
-    gpgkey=https://www.mongodb.org/static/pgp/server-6.0.asc" | sudo tee /etc/yum.repos.d/mongodb-org-6.0.repo
-    
-    if ! command -v mongod &> /dev/null
-    then
-      echo "MongoDB not found, installing version 6.0..."
-      sudo yum install -y mongodb-org-6.0.14  # Pin to a specific 6.0 version for consistency
-    else
-      echo "MongoDB found, ensuring it's the required version (6.0)..."
-    fi
-    
-    # Start MongoDB service
-    sudo systemctl enable mongod
-    sudo systemctl start mongod
-    echo "MongoDB 6.0 installation and startup complete."
+      # Install MongoDB 6.0 (older version)
+      cat <<EOM > /etc/yum.repos.d/mongodb-org-6.0.repo
+[mongodb-org-6.0]
+name=MongoDB Repository
+baseurl=https://repo.mongodb.org/yum/amazon/2/mongodb-org/6.0/x86_64/
+gpgcheck=1
+enabled=1
+gpgkey=https://www.mongodb.org/static/pgp/server-6.0.asc
+EOM
 
-    # Simple daily backup cron to S3 
-    apt-get install -y awscli
-    mkdir -p /var/backups/mongo
-    echo "0 2 * * * root mongodump --archive=/var/backups/mongo/mongo-$(date +\%F).gz --gzip && aws s3 cp /var/backups/mongo/ s3://${var.backup_bucket}/ --recursive --acl public-read" > /etc/cron.d/mongo-backup
-  EOF
+      yum install -y mongodb-org
+
+      # Enable MongoDB authentication and bind to local network only
+      sed -i 's/^#security:/security:\n  authorization: "enabled"/' /etc/mongod.conf
+      sed -i 's/bindIp: 127.0.0.1/bindIp: 127.0.0.1,10.0.0.0\/16/' /etc/mongod.conf
+
+      # Start MongoDB
+      systemctl enable mongod
+      systemctl start mongod
+
+      # Wait for MongoDB to start
+      sleep 10
+
+      # Create admin user
+      mongo <<EOM
+use admin
+db.createUser({
+  user: "admin",
+  pwd: "securepassword",
+  roles: [ { role: "root", db: "admin" } ]
+})
+EOM
+
+      # Install AWS CLI
+      curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+      unzip awscliv2.zip
+      ./aws/install
+
+      # Create backup script
+      cat <<'EOM' > /usr/local/bin/mongo_backup.sh
+#!/bin/bash
+TIMESTAMP=$(date +%F-%H-%M)
+BACKUP_DIR="/tmp/mongo-backup-$TIMESTAMP"
+mkdir -p $BACKUP_DIR
+
+mongodump --uri="mongodb://admin:securepassword@localhost:27017" --out=$BACKUP_DIR
+
+aws s3 cp $BACKUP_DIR s3://shar-wiz-mongodb-backup/mongo-backups/$TIMESTAMP/ --recursive
+rm -rf $BACKUP_DIR
+EOM
+
+      chmod +x /usr/local/bin/mongo_backup.sh
+
+      # Schedule daily backup at 2 AM
+      echo "0 2 * * * root /usr/local/bin/mongo_backup.sh" >> /etc/crontab
+EOF
 
   tags = var.tags
 }

@@ -25,7 +25,15 @@ resource "aws_security_group" "shar-eks-nodes-sg" {
     description = "Allow worker nodes to communicate with each other (UDP)"
     from_port   = 0
     to_port     = 65535
-    protocol    = "-1"
+    protocol    = "udp"
+    self        = true
+  }
+
+  ingress {
+    description = "Allow worker nodes to communicate with each other (TCP)"
+    from_port   = 0
+    to_port     = 65535
+    protocol    = "tcp"
     self        = true
   }
 

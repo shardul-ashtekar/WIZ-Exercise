@@ -8,7 +8,6 @@ ec2_ami_id = "ami-0157af9aea2eef346"
 ec2_instance_type = "t3.medium"
 cluster_name = "shar-wiz-eks"
 eks_cluster_version = "1.32"
-eks_node_ami = "ami-030f844a2277b4019"
 node_group_config = {
   desired_size = 1
   max_size     = 2

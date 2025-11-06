@@ -17,10 +17,6 @@ variable "eks_role_arn" {
 variable "node_role_arn" { 
   type = string 
 }
-variable "eks_node_ami" {
-  description = "AMI ID for EKS worker nodes"
-  type        = string
-}
 variable "key_name" {
   description = "EC2 Key pair for SSH"
   type        = string

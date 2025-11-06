@@ -1,13 +1,23 @@
+########################################
+# EKS Cluster
+
 resource "aws_eks_cluster" "wiz-eks" {
   name     = var.cluster_name
   role_arn = var.eks_role_arn
-  version = var.eks_cluster_version
+  version  = var.eks_cluster_version
 
   vpc_config {
-    subnet_ids = var.private_subnets
+    subnet_ids             = var.private_subnets
     endpoint_public_access = true
   }
+
+  tags = merge(var.tags, {
+    Name = "${var.cluster_name}-eks-cluster"
+  })
 }
+
+########################################
+# Security Group for Nodes
 
 resource "aws_security_group" "shar-eks-node-sg" {
   name        = "${var.cluster_name}-node-sg"
@@ -15,11 +25,11 @@ resource "aws_security_group" "shar-eks-node-sg" {
   vpc_id      = var.vpc_id
 
   ingress {
-    from_port       = 443
-    to_port         = 443
-    protocol        = "tcp"
-    cidr_blocks     = ["0.0.0.0/0"]
-    description     = "Allow EKS access"
+    description = "Allow EKS API access"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   ingress {
@@ -39,11 +49,11 @@ resource "aws_security_group" "shar-eks-node-sg" {
   }
 
   ingress {
-    description = "Allow SSH access from Bastion/Admin EC2"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    security_groups = [var.mongo_sg_id]
+    description      = "Allow SSH access from Bastion/Admin EC2"
+    from_port        = 22
+    to_port          = 22
+    protocol         = "tcp"
+    security_groups  = [var.mongo_sg_id]
   }
 
   egress {
@@ -58,19 +68,50 @@ resource "aws_security_group" "shar-eks-node-sg" {
   })
 }
 
+########################################
+# Allow Node SG to talk to Cluster SG
+
+resource "aws_security_group_rule" "node_to_cluster" {
+  type                     = "ingress"
+  from_port                = 443
+  to_port                  = 443
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.shar-eks-node-sg.id
+  security_group_id        = aws_eks_cluster.wiz-eks.cluster_security_group_id
+  depends_on               = [aws_eks_cluster.wiz-eks]
+}
+
+########################################
+# Fetch EKS Optimized AMI
+
+data "aws_ssm_parameter" "eks_ami" {
+  name = "/aws/service/eks/optimized-ami/${var.eks_cluster_version}/amazon-linux-2/recommended/image_id"
+}
+
+########################################
+# Launch Template for Node Group
+
 resource "aws_launch_template" "shar-eks-lt" {
   name_prefix   = "${var.cluster_name}-lt-"
-  image_id      = var.eks_node_ami
+  image_id      = data.aws_ssm_parameter.eks_ami.value
   instance_type = var.node_group_config.instance_type
-  key_name = var.key_name
+  key_name      = var.key_name
+
+  user_data = base64encode(<<-EOT
+   #!/bin/bash
+   /etc/eks/bootstrap.sh ${aws_eks_cluster.wiz-eks.name}
+  EOT
+  )
 
   network_interfaces {
     associate_public_ip_address = false
-    security_groups  = [aws_security_group.shar-eks-node-sg.id]
+    security_groups             = [aws_security_group.shar-eks-node-sg.id]
   }
+
   lifecycle {
     create_before_destroy = true
   }
+
   tag_specifications {
     resource_type = "instance"
 
@@ -78,21 +119,25 @@ resource "aws_launch_template" "shar-eks-lt" {
       Name = "${var.cluster_name}-eks-node"
     })
   }
-  
+
 }
 
+########################################
+# EKS Node Group
+
 resource "aws_eks_node_group" "wiz-eks-ng" {
-  depends_on = [ aws_launch_template.shar-eks-lt ]
-  cluster_name    = aws_eks_cluster.wiz-eks.name
-  node_group_name = "${var.cluster_name}-ng"
-  node_role_arn   = var.node_role_arn
-  subnet_ids      = var.private_subnets
+  depends_on       = [aws_launch_template.shar-eks-lt]
+  cluster_name     = aws_eks_cluster.wiz-eks.name
+  node_group_name  = "${var.cluster_name}-ng"
+  node_role_arn    = var.node_role_arn
+  subnet_ids       = var.private_subnets
 
   scaling_config {
     desired_size = var.node_group_config.desired_size
     max_size     = var.node_group_config.max_size
     min_size     = var.node_group_config.min_size
   }
+
   launch_template {
     id      = aws_launch_template.shar-eks-lt.id
     version = "$Latest"
@@ -103,5 +148,6 @@ resource "aws_eks_node_group" "wiz-eks-ng" {
   tags = merge(var.tags, {
     Name = "${var.tags.Project}-eks-ng"
   })
+
 }
 

@@ -65,10 +65,6 @@ variable "eks_cluster_version" {
   description = "The version of EKS to use"
   type        = string
 }
-variable "eks_node_ami" {
-  description = "The AMI ID for the EKS worker nodes"
-  type        = string
-}
 variable "node_group_config" {
   type = object({
     desired_size = number

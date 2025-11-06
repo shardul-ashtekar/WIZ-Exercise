@@ -5,7 +5,6 @@ module "eks" {
   eks_cluster_version = var.eks_cluster_version
   vpc_id          = module.vpc.vpc_id
   private_subnets = module.vpc.private_subnets
-  eks_node_ami    = var.eks_node_ami
   key_name        = var.key_name
   mongo_sg_id     = module.ec2.mongo_sg_id
   eks_role_arn    = module.iam.eks_role_arn

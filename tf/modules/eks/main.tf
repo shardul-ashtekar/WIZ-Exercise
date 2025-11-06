@@ -6,6 +6,10 @@ resource "aws_eks_cluster" "wiz-eks" {
   role_arn = var.eks_role_arn
   version  = var.eks_cluster_version
 
+  access_config {
+    authentication_mode = "API_AND_CONFIG_MAP"
+  }
+
   vpc_config {
     subnet_ids             = var.private_subnets
     endpoint_public_access = true

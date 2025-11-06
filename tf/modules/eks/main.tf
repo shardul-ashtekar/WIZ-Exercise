@@ -197,14 +197,3 @@ resource "aws_eks_addon" "kube_proxy" {
     Name = "${var.cluster_name}-kube-proxy-addon"
   })
 }
-
-resource "aws_eks_addon" "amazon_ebs_csi_driver" {
-  cluster_name      = aws_eks_cluster.wiz-eks.name
-  addon_name        = "aws-ebs-csi-driver"
-  addon_version     = "v1.51.1-eksbuild.1"
-
-  tags = merge(var.tags, {
-    Name = "${var.cluster_name}-ebs-csi-driver-addon"
-  })
-
-}

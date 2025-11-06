@@ -8,8 +8,8 @@ resource "aws_eks_cluster" "wiz-eks" {
   }
 }
 
-resource "aws_security_group" "shar-eks-nodes-sg" {
-  name        = "${var.cluster_name}-nodes-sg"
+resource "aws_security_group" "shar-eks-node-sg" {
+  name        = "${var.cluster_name}-node-sg"
   description = "Security group for EKS worker nodes"
   vpc_id      = var.vpc_id
 
@@ -53,7 +53,7 @@ resource "aws_security_group" "shar-eks-nodes-sg" {
   }
 
   tags = merge(var.tags, {
-    Name = "${var.cluster_name}-eks-nodes-sg"
+    Name = "${var.cluster_name}-eks-node-sg"
   })
 }
 

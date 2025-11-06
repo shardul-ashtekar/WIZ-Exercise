@@ -25,7 +25,7 @@ variable "name_prefix" {
 
 ############### EC2 Variables ##################
 
-variable "outdated_ami_id" {
+variable "ec2_ami_id" {
   description = "The AMI ID to use for the EC2 instances"
   type        = string
 }

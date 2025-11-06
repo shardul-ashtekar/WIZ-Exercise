@@ -6,7 +6,7 @@ module "ec2" {
   key_name             = var.key_name
   kube_cidr            = var.vpc_cidr
   iam_instance_profile = module.iam.ec2_profile_name
-  ami_id               = var.outdated_ami_id
+  ami_id               = var.ec2_ami_id
   instance_type        = var.default_instance_type
   tags                 = var.common_tags
   backup_bucket        = var.db_backup_bucket

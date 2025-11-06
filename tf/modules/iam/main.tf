@@ -51,6 +51,11 @@ resource "aws_iam_role_policy_attachment" "node_attach_cni" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
 }
 
+resource "aws_iam_role_policy_attachment" "node_attach_ecr" {
+  role       = aws_iam_role.node_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+}
+
 resource "aws_iam_instance_profile" "ec2_profile" {
   name = "${var.tags.Project}-ec2-profile"
   role = aws_iam_role.node_role.name

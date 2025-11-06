@@ -5,6 +5,7 @@ resource "aws_eks_cluster" "wiz-eks" {
 
   vpc_config {
     subnet_ids = var.private_subnets
+    endpoint_public_access = true
   }
 }
 

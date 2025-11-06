@@ -27,7 +27,7 @@ jobs:
         working-directory: tf/
       
       - name: Terraform Import EKS Cluster
-        run: terraform import aws_eks_cluster.wiz-eks shar-wiz-eks
+        run: terraform import module.eks.aws_eks_cluster.wiz-eks shar-wiz-eks
         working-directory: tf/
 
       - name: Terraform Plan
